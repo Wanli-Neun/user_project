@@ -3,8 +3,10 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from 'src/libs/dto/users/create-user.dto';
 import { UpdateUserDto } from 'src/libs/dto/users/update-user.dto';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { NormalizeInterceptor } from 'src/libs/interceptors/normalize.interceptor';
 
 
+@UseInterceptors(NormalizeInterceptor)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
