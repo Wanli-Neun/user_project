@@ -7,6 +7,7 @@ import { UpdateUserDto } from 'src/libs/dto/users/update-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { ResponseUserDto } from 'src/libs/dto/users/response-user.dto';
 import * as bcrypt from 'bcrypt';
+import { UpdateProfileDto } from 'src/libs/dto/users/update-profile.dto';
 
 
 @Injectable()
@@ -15,13 +16,13 @@ export class UsersService {
     constructor(@InjectModel(User.name) private userModel: Model<UserDocument>){}
 
     async findAll(): Promise<UserDocument[]>{
-        return await this.userModel.find().exec();
+        return await this.userModel.find({ isDeleted: false }).exec();
     }
 
     async findOne(id: string): Promise<UserDocument>{
-        const user = await this.userModel.findById(id).exec();
+        const user = await this.userModel.findOne({ _id: id, isDeleted: false }).exec();
         if (!user){
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('User not found or already deleted');
         }
         return user;
 
@@ -36,10 +37,10 @@ export class UsersService {
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDocument> {
-        const updatedUser = await this.userModel.findById(id).exec();
+        const updatedUser = await this.userModel.findOne({ _id: id, isDeleted: false }).exec();
 
         if (!updatedUser) {
-            throw new NotFoundException(`User not found`);
+            throw new NotFoundException(`User not found or already deleted`);
         }
         updatedUser.set(updateUserDto);
         await updatedUser.save();
@@ -48,19 +49,34 @@ export class UsersService {
     }
 
     async remove(id: string): Promise<UserDocument> {
-        const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
-        if (!deletedUser) {
-            throw new NotFoundException(`User not found`);
+        const user = await this.userModel.findOne({ _id: id, isDeleted: false }).exec();
+        if (!user) {
+            throw new NotFoundException(`User not found or already deleted`);
         }
-        return deletedUser;
+        user.isDeleted = true;
+
+        return await user.save();
     }
 
     async findByEmail(email: string): Promise<UserDocument | null> {
-        return await this.userModel.findOne({ email }).exec();
+        return await this.userModel.findOne({ email, isDeleted: false }).exec();
     }
 
     async validatePassword(user: UserDocument, password: string): Promise<boolean> {
         return await bcrypt.compare(password, user.password);
+    }
+
+    async updateProfile(id: string, updateProfileDto: UpdateProfileDto): Promise<UserDocument> {
+        const updatedUser = await this.userModel.findOne({ _id: id, isDeleted: false }).exec();
+
+        if (!updatedUser) {
+            throw new NotFoundException(`User not found or already deleted`);
+        }
+
+        updatedUser.set(updateProfileDto);
+        await updatedUser.save();
+
+        return updatedUser;
     }
 
 }

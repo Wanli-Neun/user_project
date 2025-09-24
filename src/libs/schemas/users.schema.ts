@@ -29,6 +29,9 @@ export class User {
 
     @Prop()
     updateAt: Date;
+
+    @Prop({ default: false })
+    isDeleted: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

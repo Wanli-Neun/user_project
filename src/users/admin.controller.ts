@@ -15,12 +15,12 @@ import { AuthGuard } from '@nestjs/passport';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @UseInterceptors(NormalizeInterceptor)
 @UseInterceptors(ClassSerializerInterceptor)
-@Controller('users')
-export class UsersController {
+@Roles('admin')
+@Controller('admin/users')
+export class AdminController {
 
     constructor(private readonly usersService: UsersService){}
 
-    @Roles('admin')
     @Get()
     async findAll(): Promise<ResponseUserDto[]> {
         const users = await this.usersService.findAll();
@@ -34,7 +34,6 @@ export class UsersController {
         return plainToInstance(ResponseUserDto, user.toObject(), { excludeExtraneousValues: true });
     }
 
-    @Roles('admin')
     @Post()
     async create(@Body() createUserDto: CreateUserDto): Promise<ResponseUserDto>{
         const newUser = await this.usersService.create(createUserDto);

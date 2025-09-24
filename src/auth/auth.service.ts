@@ -6,7 +6,8 @@ import { UnauthorizedException } from '@nestjs/common';
 import { SignUpDto } from 'src/libs/dto/auth/signup.dto';
 import { UserRole } from 'src/libs/dto/users/create-user.dto';
 import { UserDocument } from 'src/libs/schemas/users.schema';
-
+import { NotFoundException } from '@nestjs/common';
+import { ChangePasswordDto } from 'src/libs/dto/auth/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +46,18 @@ export class AuthService {
         return newUser;
     }
 
+    async changePassword(id: string, changePassword: ChangePasswordDto): Promise<UserDocument> {
+        const user = await this.usersService.findOne(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        const isValid = await this.usersService.validatePassword(user, changePassword.currentPassword);
+        if (!isValid) throw new UnauthorizedException('Current password is incorrect');
+
+        user.password = changePassword.newPassword;
+        await user.save();
+
+        return user;
+    }
 
 
 }

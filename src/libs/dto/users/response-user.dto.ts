@@ -22,6 +22,9 @@ export class ResponseUserDto {
   @Exclude()
   password: string;
 
+  @Exclude()
+  isDeleted: boolean;
+
   constructor(partial: Partial<ResponseUserDto>) {
     Object.assign(this, partial);
   }
