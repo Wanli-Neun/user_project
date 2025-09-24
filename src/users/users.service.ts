@@ -6,6 +6,7 @@ import { CreateUserDto } from '../libs/dto/users/create-user.dto';
 import { UpdateUserDto } from 'src/libs/dto/users/update-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { ResponseUserDto } from 'src/libs/dto/users/response-user.dto';
+import * as bcrypt from 'bcrypt';
 
 
 @Injectable()
@@ -13,30 +14,28 @@ export class UsersService {
 
     constructor(@InjectModel(User.name) private userModel: Model<UserDocument>){}
 
-    async findAll(): Promise<ResponseUserDto[]>{
-        const users = await this.userModel.find().exec();
-
-        return plainToInstance(ResponseUserDto, users.map(u => u.toObject()), { excludeExtraneousValues: true });
+    async findAll(): Promise<UserDocument[]>{
+        return await this.userModel.find().exec();
     }
 
-    async findOne(id: string){
+    async findOne(id: string): Promise<UserDocument>{
         const user = await this.userModel.findById(id).exec();
         if (!user){
             throw new NotFoundException('User not found');
         }
-        return plainToInstance(ResponseUserDto, user.toObject(), { excludeExtraneousValues: true });
+        return user;
 
     }
 
-    async create(createUserDto: CreateUserDto): Promise<ResponseUserDto>{
+    async create(createUserDto: CreateUserDto): Promise<UserDocument>{
         const newUser = new this.userModel(createUserDto);
         await newUser.save();
 
-        return plainToInstance(ResponseUserDto, newUser.toObject(), { excludeExtraneousValues: true });
+        return newUser;
 
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto): Promise<ResponseUserDto> {
+    async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDocument> {
         const updatedUser = await this.userModel.findById(id).exec();
 
         if (!updatedUser) {
@@ -45,15 +44,23 @@ export class UsersService {
         updatedUser.set(updateUserDto);
         await updatedUser.save();
 
-        return plainToInstance(ResponseUserDto, updatedUser.toObject(), { excludeExtraneousValues: true });
+        return updatedUser;
     }
 
-    async remove(id: string): Promise<ResponseUserDto> {
+    async remove(id: string): Promise<UserDocument> {
         const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
         if (!deletedUser) {
             throw new NotFoundException(`User not found`);
         }
-        return plainToInstance(ResponseUserDto, deletedUser.toObject(), { excludeExtraneousValues: true });
+        return deletedUser;
+    }
+
+    async findByEmail(email: string): Promise<UserDocument | null> {
+        return await this.userModel.findOne({ email }).exec();
+    }
+
+    async validatePassword(user: UserDocument, password: string): Promise<boolean> {
+        return await bcrypt.compare(password, user.password);
     }
 
 }
