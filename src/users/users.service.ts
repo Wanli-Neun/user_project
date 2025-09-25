@@ -4,8 +4,6 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from '../libs/schemas/users.schema';
 import { CreateUserDto } from '../libs/dto/users/create-user.dto';
 import { UpdateUserDto } from 'src/libs/dto/users/update-user.dto';
-import { plainToInstance } from 'class-transformer';
-import { ResponseUserDto } from 'src/libs/dto/users/response-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from 'src/libs/dto/users/update-profile.dto';
 

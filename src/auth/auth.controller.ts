@@ -33,4 +33,18 @@ export class AuthController {
     return plainToInstance(ResponseUserDto, updatedUser.toObject(), { excludeExtraneousValues: true });
   }
 
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string): Promise<{ token: string }> {
+    const token = await this.authService.forgotPassword(email);
+    return { token };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ): Promise<{ message: string }> {
+    return this.authService.resetPassword(token, newPassword);
+  }
+
 }

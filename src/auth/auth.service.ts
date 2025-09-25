@@ -8,6 +8,8 @@ import { UserRole } from 'src/libs/dto/users/create-user.dto';
 import { UserDocument } from 'src/libs/schemas/users.schema';
 import { NotFoundException } from '@nestjs/common';
 import { ChangePasswordDto } from 'src/libs/dto/auth/change-password.dto';
+import { ResetTokenService } from 'src/reset-token/reset-token.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
+        private readonly resetTokenService: ResetTokenService
     ) {}
 
 
@@ -58,6 +61,32 @@ export class AuthService {
 
         return user;
     }
+
+    async forgotPassword(email: string): Promise<string> {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) throw new NotFoundException('User not found');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenDoc = await this.resetTokenService.create(user._id, resetToken);
+
+        return tokenDoc.token;
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+
+        const tokenDoc = await this.resetTokenService.validateToken(token);
+
+        const user = await this.usersService.findOne(tokenDoc.userId.toString());
+        if (!user) throw new NotFoundException('User not found');
+
+        user.password = newPassword;
+        await user.save();
+
+        await this.resetTokenService.markAsUsed(tokenDoc);
+
+        return { message: 'Password reset successfully' };
+    }
+
+
 
 
 }
