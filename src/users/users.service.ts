@@ -77,4 +77,16 @@ export class UsersService {
         return updatedUser;
     }
 
+    async findPaginated(lastId?: string, limit = 10) {
+        const filter = lastId ? { _id: { $gt: lastId } } : {};
+
+        return this.userModel
+            .find(filter)
+            .sort({ _id: 1 })
+            .limit(limit)
+            .lean()       
+            .exec();
+    }
+
+
 }

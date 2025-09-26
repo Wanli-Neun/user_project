@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CommonMiddlewareModule } from './libs/middlewares/common-middleware.module';
 import { AuthModule } from './auth/auth.module';
 import { ResetTokenModule } from './reset-token/reset-token.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ResetTokenModule } from './reset-token/reset-token.module';
     CommonMiddlewareModule,
     AuthModule,
     ResetTokenModule,
+    FileModule,
   ],
   controllers: [],
   providers: [],
