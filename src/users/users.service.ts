@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../libs/schemas/users.schema';
@@ -22,16 +22,17 @@ export class UsersService {
         if (!user){
             throw new NotFoundException('User not found or already deleted');
         }
-        return user;
 
+        return user;
     }
 
     async create(createUserDto: CreateUserDto): Promise<UserDocument>{
-        const newUser = new this.userModel(createUserDto);
-        await newUser.save();
+        const existed = await this.userModel.findOne({ email: createUserDto.email, isDeleted: false }).exec();
+        if (existed){
+            throw new BadRequestException(`Email ${createUserDto.email} already exists`);
+        }
 
-        return newUser;
-
+        return await new this.userModel(createUserDto).save();
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDocument> {

@@ -1,9 +1,10 @@
-import { Controller, Get, Res, UseGuards, Header, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards, Post, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { FileService } from './file.service';
 import { type Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/libs/guards/roles.guard';
 import { Roles } from 'src/libs/decorators/role.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 
 
@@ -25,4 +26,17 @@ export class FileController {
 
         res.end();
     }
+
+    @UseInterceptors(FileInterceptor('file'))
+    @Post('import-users')
+    async importUserFromExcel(@UploadedFile() file: Express.Multer.File ){
+        if (!file) throw new BadRequestException('No file uploaded');
+
+        const result = await this.fileService.importUsersFromExcel(file.path);
+
+        return {
+            message: `Imported ${result.importedCount} users successfully`,
+        };
+    }
+
 }
